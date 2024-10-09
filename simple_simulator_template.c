@@ -1,4 +1,4 @@
-// gcc simple_simulator_Template.c -O3 -march=native -o simulador -Wall -lm
+// gcc simple_simulator_template.c -O3 -march=native -o simulador -Wall -lm
 // -lm is option to execute math.h library file.
 /*
 Perguntas:
@@ -355,7 +355,10 @@ loop:
 				case LOAD:
 					// MAR = MEMORY[PC];
 					// PC++;
-
+					selM1 = sPC;
+					RW = 0;
+					LoadMAR = 1; 
+					IncPC = 1;
 					// -----------------------------
 					state=STATE_EXECUTE;
 					break;
@@ -363,27 +366,55 @@ loop:
 				case STORE:
 					//MAR = MEMORY[PC];
 					//PC++;
-					
+					selM1 = sPC;
+					RW = 0;
+					LoadMAR = 1; 
+					IncPC = 1; 
 					// -----------------------------
 					state=STATE_EXECUTE;
 					break;
 
 				case LOADI:
 					// reg[rx] = MEMORY[reg[ry]];
-					
+					selM4 = ry;
+					selM1 = sM4;
+					RW = 0;
+					selM2 = sDATA_OUT;
+					LoadReg[rx] = 1;
 					// -----------------------------
 					state=STATE_FETCH;
 					break;
 
 				case STOREI:
 					//mem[reg[rx]] = reg[ry];
-					
+					selM4 = rx;
+					selM1 = sM4;
+					RW = 1;
+					selM3 = ry;
+					selM5 = sM3;
 					// -----------------------------
 					state=STATE_FETCH;
 					break;
 
 				case MOV:
-					
+					switch(pega_pedaco(IR,1,0))
+					{ case 0:
+						// reg[rx] = reg[ry];
+						selM4 = ry;
+						selM2 = sM4;
+						LoadReg[rx] = 1;
+						break;
+					  case 1:
+						// reg[rx] = SP;
+						selM2 = sSP;
+						LoadReg[rx] = 1;
+						break;
+						default:
+						// SP = reg[rx];
+						selM4 = rx;
+						LoadSP = 1;
+						break;
+					}
 					// -----------------------------
 					state=STATE_FETCH;
 					break;
@@ -492,12 +523,13 @@ loop:
 						RW = 1;
 						selM1 = sSP;
 						DecSP = 1;
-					state=STATE_EXECUTE;
+						state=STATE_EXECUTE;
 					}
-					else
+					else {
 						//PC++;
 						IncPC = 1;
-					state=STATE_FETCH;
+						state=STATE_FETCH;
+					}
 					// -----------------------------
 					break;
 
