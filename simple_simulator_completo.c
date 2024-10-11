@@ -1,5 +1,5 @@
 // simulador completo copiado de https://github.com/rafa-speres/Processador-ICMC
-// gcc simple_simulator_template.c -O3 -march=native -o simulador -Wall -lm
+// gcc simple_simulator_completo.c -O3 -march=native -o simulador -Wall -lm
 // -lm is option to execute math.h library file.
 /*
 Perguntas:
