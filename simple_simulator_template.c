@@ -415,7 +415,7 @@ loop:
 				case LNOT:
 					// reg[rx] = reg[ry] + reg[rz]; // Soma ou outra operacao
 					selM3 = ry;
-					selM1 = rz;
+					selM4 = rz;
 					OP = opcode;
 					carry = pega_pedaco(IR,0,0);
 					selM2 = sULA;
