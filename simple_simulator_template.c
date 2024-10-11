@@ -397,24 +397,9 @@ loop:
 					break;
 
 				case MOV:
-					switch(pega_pedaco(IR,1,0))
-					{ case 0:
-						// reg[rx] = reg[ry];
-						selM4 = ry;
-						selM2 = sM4;
-						LoadReg[rx] = 1;
-						break;
-					  case 1:
-						// reg[rx] = SP;
-						selM2 = sSP;
-						LoadReg[rx] = 1;
-						break;
-						default:
-						// SP = reg[rx];
-						selM4 = rx;
-						LoadSP = 1;
-						break;
-					}
+					selM4 = ry;
+					selM2 = sM4;
+					LoadReg[rx] = 1;
 					// -----------------------------
 					state=STATE_FETCH;
 					break;
@@ -429,7 +414,14 @@ loop:
 				case LXOR:
 				case LNOT:
 					// reg[rx] = reg[ry] + reg[rz]; // Soma ou outra operacao
-					
+					selM3 = ry;
+					selM1 = rz;
+					OP = opcode;
+					carry = pega_pedaco(IR,0,0);
+					selM2 = sULA;
+					LoadReg[rx] = 1;
+					selM6 = sULA;
+					LoadFR  = 1;
 					// -----------------------------
 					state=STATE_FETCH;
 					break;
@@ -534,14 +526,18 @@ loop:
 					break;
 
 				case PUSH:
-					
+					selM1 = sSP;
+					RW = 1;
+					selM3 = rx;
+					selM5 = sM3;
+					DecSP = 1;
 					// -----------------------------
 					state=STATE_FETCH;
 					break;
 
 				case POP:
 					//SP++;
-					
+					IncSP = 1;
 					// -----------------------------
 					state=STATE_EXECUTE;
 					break;
@@ -616,7 +612,10 @@ loop:
 					break; 
 
 				case POP:
-					
+					selM1 = sSP;
+					RW = 0;
+					selM2 = sDATA_OUT;
+					LoadReg[rx] = 1;
 					// -----------------------------
 					state=STATE_FETCH;
 					break; 
