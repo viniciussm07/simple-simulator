@@ -34,7 +34,7 @@ add r3, r0, r4
 outchar r1, r3  ; Desenha 2ro char
 loadn r4, #40
 add r3, r0, r4
-outchar r1, r3 ; Desenha 3ro char
+outchar r1, r3  ; Desenha 3ro char
 loadn r4, #41
 add r3, r0, r4
 outchar r1, r3  ;  Desenha 4ro char
@@ -57,7 +57,7 @@ push r4
 loadn r1, #'<'
 outchar r1, r0  ; Desenha 1ro char
 loadn r1, #'>'
-loadn r4 #1
+loadn r4, #1
 add r3, r0, r4
 outchar r1, r3  ; Desenha 2ro char
 loadn r1, #'='
