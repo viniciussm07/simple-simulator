@@ -428,14 +428,29 @@ loop:
 
 				case INC:
 					//reg[rx]++;                                  // Inc Rx ou DEC
-					
+					selM3 = rx;
+					selM4 = 8;  // 8 para selecionar o nr. 1 como entrada do MUX4
+
+					if(pega_pedaco(IR,6,6) == 0) OP = ADD;  // Se IR6 = 0 --> INC
+					else OP = SUB;                          // Se IR6 = 1 --> DEC
+
+					carry = 0;
+					selM2 = sULA;
+					LoadReg[rx] = 1;
+					selM6 = sULA;
+					LoadFR  = 1;
 					// -----------------------------
 					state=STATE_FETCH;
 					break;
 
 				case CMP:   // seta 3 flags: maior, menor ou igual
 					//if(rx == ry)
-					
+					selM3 = rx;
+					selM4 = ry;
+					OP = pega_pedaco(IR,15,10);
+					carry = 0;
+					selM6 = sULA;
+					LoadFR  = 1;
 					// -----------------------------
 					state=STATE_FETCH;
 					break;
@@ -455,7 +470,7 @@ loop:
 								break;
 					}
 					FR[3] = 0; // -- FR = <...|zero|equal|lesser|greater>
-					if(reg[rx] == 0)
+					if(!reg[rx])
 						FR[3] = 1;  // Se resultado = 0, seta o Flag de Zero
 
 					// -----------------------------
@@ -495,26 +510,29 @@ loop:
 				case CALL:
 					COND = pega_pedaco(IR,9,6);
 
-					if((COND == 0)                       	                      // NO COND
+					if( (COND == 0) 											  // NO COND
 							|| (FR[0]==1 && (COND==7))                            // GREATER
-							|| ((FR[2]==1 || FR[0]==1) && (COND==9))              // GREATER EQUAL
+							|| ((FR[2]==1 || FR[0]==1) && (COND==9))  			  // GREATER EQUAL
 							|| (FR[1]==1 && (COND==8))                            // LESSER
-							|| ((FR[2]==1 || FR[1]==1) && (COND==10))             // LESSER EQUAL
+							|| ((FR[2]==1 || FR[1]==1) && (COND==10)) 			  // LESSER EQUAL
 							|| (FR[2]==1 && (COND==1))                            // EQUAL
-							|| (FR[2]==0 && (COND==2))                            // NOT EQUAL
-							|| (FR[3]==1 && (COND==3))                            // ZERO
-							|| (FR[3]==0 && (COND==4))                            // NOT ZERO
-							|| (FR[4]==1 && (COND==5))                            // CARRY
-							|| (FR[4]==0 && (COND==6))                            // NOT CARRY
-							|| (FR[5]==1 && (COND==11))                           // OVERFLOW
-							|| (FR[5]==0 && (COND==12))                           // NOT OVERFLOW
-							|| (FR[6]==1 && (COND==14))                           // NEGATIVO
-							|| (FR[9]==1 && (COND==13)))                          // DIVBYZERO
-					{ // PC = MEMORY[PC];
-						selM5 = sPC;
+							|| (FR[2]==0 && (COND==2))  						  // NOT EQUAL
+							|| (FR[3]==1 && (COND==3))  						  // ZERO
+							|| (FR[3]==0 && (COND==4))  						  // NOT ZERO
+							|| (FR[4]==1 && (COND==5))  						  // CARRY
+							|| (FR[4]==0 && (COND==6))  						  // NOT CARRY
+							|| (FR[5]==1 && (COND==11)) 						  // OVERFLOW
+							|| (FR[5]==0 && (COND==12)) 						  // NOT OVERFLOW
+							|| (FR[6]==1 && (COND==14)) 						  // NEGATIVO
+							|| (FR[9]==1 && (COND==13))) { 						  // DIVBYZERO
+						// MEMORY[SP] = PC;
+						// SP--;
+						// PC = MEMORY[PC];
+
 						RW = 1;
 						selM1 = sSP;
-						DecSP = 1;
+						selM5 = sPC;
+						DecSP = 1;   
 						state=STATE_EXECUTE;
 					}
 					else {
@@ -528,7 +546,13 @@ loop:
 				case PUSH:
 					selM1 = sSP;
 					RW = 1;
-					selM3 = rx;
+
+					if(pega_pedaco(IR,6,6) == 0) // Registrador
+						//MEMORY[SP] = reg[rx];
+						selM3 = rx;            
+					else  // FR
+						selM3 = 8;  // com 8 entra o FR no M3
+
 					selM5 = sM3;
 					DecSP = 1;
 					// -----------------------------
@@ -614,8 +638,15 @@ loop:
 				case POP:
 					selM1 = sSP;
 					RW = 0;
-					selM2 = sDATA_OUT;
-					LoadReg[rx] = 1;
+					if(pega_pedaco(IR,6,6) == 0) { // Registrador
+						//reg[rx] = MEMORY[SP];
+						selM2 = sDATA_OUT;
+						LoadReg[rx] = 1;
+					}
+					else { // FR
+						selM6 = sDATA_OUT;
+						LoadFR = 1;
+					}
 					// -----------------------------
 					state=STATE_FETCH;
 					break; 
@@ -628,14 +659,6 @@ loop:
 					// -----------------------------
 					state=STATE_EXECUTE2;
 					break;
-
-				case PUSH:
-					
-					// -----------------------------
-					state=STATE_FETCH;
-					break;
-
-
 			}
 
 			//state=STATE_EXECUTE2;
@@ -720,7 +743,7 @@ void le_arquivo(void){
 	int i, j;
 	int processando = 0; // Flag para varreo o arquivo CPURAM.mif e tirar o cabecalho
 
-	if ( (stream = fopen("cpuram.mif","r")) == NULL)  // Abre o arquivo para leitura
+	if ( (stream = fopen("TestaCPU.mif","r")) == NULL)  // Abre o arquivo para leitura
 	{
 		printf("Error: File not OPEN!");
 		exit(1);
